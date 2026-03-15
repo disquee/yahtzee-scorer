@@ -1,20 +1,23 @@
+// Each category now includes the exact array of legally possible scores
 const categories = [
-    { id: 'ones', label: 'Ones', section: 'upper' },
-    { id: 'twos', label: 'Twos', section: 'upper' },
-    { id: 'threes', label: 'Threes', section: 'upper' },
-    { id: 'fours', label: 'Fours', section: 'upper' },
-    { id: 'fives', label: 'Fives', section: 'upper' },
-    { id: 'sixes', label: 'Sixes', section: 'upper' },
+    { id: 'ones', label: 'Ones', section: 'upper', options: [0, 1, 2, 3, 4, 5] },
+    { id: 'twos', label: 'Twos', section: 'upper', options: [0, 2, 4, 6, 8, 10] },
+    { id: 'threes', label: 'Threes', section: 'upper', options: [0, 3, 6, 9, 12, 15] },
+    { id: 'fours', label: 'Fours', section: 'upper', options: [0, 4, 8, 12, 16, 20] },
+    { id: 'fives', label: 'Fives', section: 'upper', options: [0, 5, 10, 15, 20, 25] },
+    { id: 'sixes', label: 'Sixes', section: 'upper', options: [0, 6, 12, 18, 24, 30] },
     { id: 'upper_sum', label: 'Upper Sum', section: 'upper_calc', isCalc: true },
     { id: 'bonus', label: 'Bonus (35)', section: 'upper_calc', isCalc: true },
     { id: 'upper_total', label: 'Upper Total', section: 'upper_calc', isCalc: true },
-    { id: 'three_kind', label: '3 of a Kind', section: 'lower' },
-    { id: 'four_kind', label: '4 of a Kind', section: 'lower' },
-    { id: 'full_house', label: 'Full House (25)', section: 'lower' },
-    { id: 'sm_straight', label: 'Sm. Straight (30)', section: 'lower' },
-    { id: 'lg_straight', label: 'Lg. Straight (40)', section: 'lower' },
-    { id: 'yahtzee', label: 'YAHTZEE (50)', section: 'lower' },
-    { id: 'chance', label: 'Chance', section: 'lower' },
+    // 3/4 of a kind and Chance are sums of 5 dice. Max is 30, min is 5 (plus 0 for scratching)
+    { id: 'three_kind', label: '3 of a Kind', section: 'lower', options: [0, 5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30] },
+    { id: 'four_kind', label: '4 of a Kind', section: 'lower', options: [0, 5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30] },
+    { id: 'full_house', label: 'Full House (25)', section: 'lower', options: [0, 25] },
+    { id: 'sm_straight', label: 'Sm. Straight (30)', section: 'lower', options: [0, 30] },
+    { id: 'lg_straight', label: 'Lg. Straight (40)', section: 'lower', options: [0, 40] },
+    { id: 'yahtzee', label: 'YAHTZEE (50)', section: 'lower', options: [0, 50] },
+    { id: 'yahtzee_bonus', label: 'Yahtzee Bonus', section: 'lower', options: [0, 100, 200, 300] },
+    { id: 'chance', label: 'Chance', section: 'lower', options: [0, 5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30] },
     { id: 'lower_total', label: 'Lower Total', section: 'lower_calc', isCalc: true },
     { id: 'grand_total', label: 'GRAND TOTAL', section: 'grand_calc', isCalc: true }
 ];
@@ -41,9 +44,18 @@ function renderTable() {
             if (cat.isCalc) {
                 html += `<td id="calc-${pIndex}-${cat.id}">${p.scores[cat.id] || 0}</td>`;
             } else {
-                html += `<td><input type="number" min="0" max="100" 
-                            value="${p.scores[cat.id] === undefined ? '' : p.scores[cat.id]}" 
-                            onchange="updateScore(${pIndex}, '${cat.id}', this.value)"></td>`;
+                // Generate strict dropdown options based on the rules
+                let optionsHtml = `<option value=""></option>`; // Empty default state
+                cat.options.forEach(opt => {
+                    const selected = p.scores[cat.id] === opt ? 'selected' : '';
+                    optionsHtml += `<option value="${opt}" ${selected}>${opt}</option>`;
+                });
+                
+                html += `<td>
+                            <select onchange="updateScore(${pIndex}, '${cat.id}', this.value)">
+                                ${optionsHtml}
+                            </select>
+                         </td>`;
             }
         });
         html += '</tr>';
@@ -55,8 +67,11 @@ function renderTable() {
 }
 
 window.updateScore = function(playerIndex, categoryId, value) {
-    const numVal = parseInt(value, 10);
-    players[playerIndex].scores[categoryId] = isNaN(numVal) ? undefined : numVal;
+    if (value === "") {
+        players[playerIndex].scores[categoryId] = undefined;
+    } else {
+        players[playerIndex].scores[categoryId] = parseInt(value, 10);
+    }
     saveState();
     calculateTotals();
 };
@@ -69,57 +84,11 @@ window.removePlayer = function(index) {
 
 function calculateTotals() {
     players.forEach((p, index) => {
+        // Upper Section Math
         let upperSum = 0;
         ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].forEach(id => {
             upperSum += p.scores[id] || 0;
         });
 
         const bonus = upperSum >= 63 ? 35 : 0;
-        const upperTotal = upperSum + bonus;
-
-        let lowerSum = 0;
-        ['three_kind', 'four_kind', 'full_house', 'sm_straight', 'lg_straight', 'yahtzee', 'chance'].forEach(id => {
-            lowerSum += p.scores[id] || 0;
-        });
-
-        const grandTotal = upperTotal + lowerSum;
-
-        p.scores.upper_sum = upperSum;
-        p.scores.bonus = bonus;
-        p.scores.upper_total = upperTotal;
-        p.scores.lower_total = lowerSum;
-        p.scores.grand_total = grandTotal;
-
-        if (document.getElementById(`calc-${index}-upper_sum`)) {
-            document.getElementById(`calc-${index}-upper_sum`).innerText = upperSum;
-            document.getElementById(`calc-${index}-bonus`).innerText = bonus;
-            document.getElementById(`calc-${index}-upper_total`).innerText = upperTotal;
-            document.getElementById(`calc-${index}-lower_total`).innerText = lowerSum;
-            document.getElementById(`calc-${index}-grand_total`).innerText = grandTotal;
-        }
-    });
-    saveState();
-}
-
-document.getElementById('add-player-btn').addEventListener('click', () => {
-    const name = prompt('Enter player name:');
-    if (name) {
-        players.push({ name, scores: {} });
-        saveState();
-        renderTable();
-    }
-});
-
-document.getElementById('reset-btn').addEventListener('click', () => {
-    if (confirm('Are you sure you want to clear all scores?')) {
-        players.forEach(p => p.scores = {});
-        saveState();
-        renderTable();
-    }
-});
-
-// Initial Render
-if (players.length === 0) {
-    players.push({ name: 'Player 1', scores: {} });
-}
-renderTable();
+        const upperTotal = upperSum
