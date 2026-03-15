@@ -173,7 +173,7 @@ function renderTable() {
     });
     html += '</tr></thead><tbody>';
 
-    categories.forEach(cat => {
+ categories.forEach(cat => {
         const rowClass = cat.isCalc ? 'total-row' : 'category-row';
         html += `<tr class="${rowClass}"><td>${cat.label}</td>`;
         players.forEach((p, pIndex) => {
@@ -181,17 +181,34 @@ function renderTable() {
                 html += `<td id="calc-${pIndex}-${cat.id}">${p.scores[cat.id] || 0}</td>`;
             } else {
                 let optionsHtml = `<option value=""></option>`; 
-                const suggestion = possibleScores[cat.id];
+                const possibleScore = possibleScores[cat.id];
+                const currentScore = p.scores[cat.id];
+
+                // --- NEW ENFORCEMENT LOGIC ---
+                // If the game isn't "Score Only" and dice have been rolled (rollsLeft < 3)
+                if (!isScoreOnly && rollsLeft < 3) {
+                    // If they already have a score here, just show it
+                    if (currentScore !== undefined) {
+                        optionsHtml += `<option value="${currentScore}" selected>${currentScore}</option>`;
+                    } 
+                    // Otherwise, only show the score possible from the current dice
+                    else {
+                        const displayVal = (optimizerEnabled && possibleScore > 0) ? `🎯 ${possibleScore}` : possibleScore;
+                        optionsHtml += `<option value="${possibleScore}">${displayVal}</option>`;
+                    }
+                } 
+                // --- SCORE CARD ONLY MODE (Keep original behavior) ---
+                else {
+                    cat.options.forEach(opt => {
+                        const selected = currentScore === opt ? 'selected' : '';
+                        optionsHtml += `<option value="${opt}" ${selected}>${opt}</option>`;
+                    });
+                }
                 
-                const hasValidSuggestion = (optimizerEnabled && rollsLeft < 3 && p.scores[cat.id] === undefined && suggestion > 0);
+                // Highlight suggestible fields only if optimizer is on and it's a valid move
+                const shouldHighlight = (optimizerEnabled && !isScoreOnly && rollsLeft < 3 && currentScore === undefined && possibleScore > 0);
+                const selectStyle = shouldHighlight ? 'background-color: #e8f4f8; border-color: #000; font-weight: bold;' : '';
                 
-                cat.options.forEach(opt => {
-                    const selected = p.scores[cat.id] === opt ? 'selected' : '';
-                    const displayOpt = (hasValidSuggestion && opt === suggestion) ? `🎯 ${opt}` : opt;
-                    optionsHtml += `<option value="${opt}" ${selected}>${displayOpt}</option>`;
-                });
-                
-                const selectStyle = hasValidSuggestion ? 'background-color: #e8f4f8; border-color: #2c3e50; font-weight: bold; color: #2c3e50;' : '';
                 html += `<td><select onchange="updateScore(${pIndex}, '${cat.id}', this.value)" style="${selectStyle}">${optionsHtml}</select></td>`;
             }
         });
@@ -203,11 +220,22 @@ function renderTable() {
 }
 
 window.updateScore = function(playerIndex, categoryId, value) {
-    if (value === "") delete players[playerIndex].scores[categoryId];
-    else players[playerIndex].scores[categoryId] = parseInt(value, 10);
+    // If a player selects the empty option, we clear the score
+    if (value === "") {
+        delete players[playerIndex].scores[categoryId];
+    } else {
+        players[playerIndex].scores[categoryId] = parseInt(value, 10);
+    }
+    
     saveState();
     calculateTotals();
-    resetDice();
+    
+    // Crucial: Only reset dice if we are in "Play" mode
+    if (!isScoreOnly) {
+        resetDice(); 
+    } else {
+        renderTable(); // Just refresh the UI for score-only mode
+    }
 };
 
 window.removePlayer = function(index) {
