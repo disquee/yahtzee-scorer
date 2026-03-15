@@ -24,22 +24,22 @@ let players = [];
 try {
     players = JSON.parse(localStorage.getItem('yahtzeePlayers')) || [];
 } catch (e) {
-    console.warn("Private browsing detected: LocalStorage is disabled. State won't save on refresh.");
+    console.warn("Private browsing detected: LocalStorage disabled.");
 }
 
 function saveState() {
     try {
         localStorage.setItem('yahtzeePlayers', JSON.stringify(players));
-    } catch (e) {
-        // Fail silently in private browsing
-    }
+    } catch (e) {}
 }
 
 function renderTable() {
     const table = document.getElementById('score-table');
     let html = '<thead><tr><th>Category</th>';
+    
+    // UI Fix: Use a proper <button> for removing players so iOS registers the tap
     players.forEach((p, index) => {
-        html += `<th>${p.name} <span style="cursor:pointer; font-size: 0.8em;" onclick="removePlayer(${index})">❌</span></th>`;
+        html += `<th>${p.name} <br><button style="font-size: 0.7em; padding: 2px 4px; margin-top: 4px; background: #ffe6e6; color: #cc0000;" onclick="removePlayer(${index})">Remove</button></th>`;
     });
     html += '</tr></thead><tbody>';
 
@@ -84,7 +84,6 @@ window.updateScore = function(playerIndex, categoryId, value) {
 
 window.removePlayer = function(index) {
     players.splice(index, 1);
-    // Guarantee at least one blank player remains so the table doesn't break
     if (players.length === 0) {
         players.push({ name: 'Player 1', scores: {} });
     }
@@ -126,20 +125,21 @@ function calculateTotals() {
     saveState();
 }
 
-// Add Player Logic
+// UI Fix: Automatically assign a name if the input is blank
 document.getElementById('add-player-btn').addEventListener('click', () => {
     const inputField = document.getElementById('new-player-name');
-    const name = inputField.value.trim();
+    let name = inputField.value.trim();
     
-    if (name) {
-        players.push({ name, scores: {} });
-        saveState();
-        renderTable();
-        inputField.value = ''; 
+    if (!name) {
+        name = `Player ${players.length + 1}`;
     }
+    
+    players.push({ name, scores: {} });
+    saveState();
+    renderTable();
+    inputField.value = ''; 
 });
 
-// Reset Game Logic (Double Tap)
 let resetTapCount = 0;
 document.getElementById('reset-btn').addEventListener('click', (e) => {
     if (resetTapCount === 0) {
@@ -163,7 +163,6 @@ document.getElementById('reset-btn').addEventListener('click', (e) => {
     }
 });
 
-// Initial Render
 if (players.length === 0) {
     players.push({ name: 'Player 1', scores: {} });
 }
