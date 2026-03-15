@@ -7,8 +7,8 @@
     --border-black: #000000;
     --slate-gray: #4B5563;
     --terminal-gray: #F3F4F6;
-    --font-mono: 'Roboto Mono', monospace;
-    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'Roboto Mono', 'Courier New', Courier, monospace;
+    --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 body {
@@ -17,6 +17,7 @@ body {
     font-family: var(--font-sans);
     margin: 0;
     padding: 0;
+    -webkit-font-smoothing: antialiased;
 }
 
 main {
@@ -25,7 +26,12 @@ main {
     padding: 1rem;
 }
 
-h1, h2 { font-family: var(--font-mono); text-transform: uppercase; margin: 0; }
+h1, h2, h3 {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    margin: 0;
+}
 
 header {
     display: flex;
@@ -34,78 +40,102 @@ header {
     padding: 1rem;
     border-bottom: 3px solid var(--border-black);
     background: var(--bg-white);
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-/* --- BUTTONS & INPUTS --- */
+header h1 { font-size: 2rem; }
+
+.controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
 button {
     font-family: var(--font-mono);
     text-transform: uppercase;
     font-weight: bold;
+    background-color: var(--bg-white);
+    color: var(--text-black);
     border: 2px solid var(--border-black);
     padding: 0.6rem 1rem;
     cursor: pointer;
     box-shadow: 4px 4px 0px var(--border-black);
-    background: white;
 }
 
-button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--border-black); }
+button:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px var(--border-black);
+}
 
-select, input {
+input, select {
     font-family: var(--font-mono);
     border: 2px solid var(--border-black);
     padding: 0.6rem;
     background: var(--terminal-gray);
+    color: var(--text-black);
 }
 
-/* --- STICKY LAYERS --- */
-.dice-container {
-    position: sticky;
-    top: 0;
-    z-index: 100;
+/* --- SETUP SCREEN: REVERTED SPACING --- */
+.setup-container {
     background: var(--bg-white);
     border: 3px solid var(--border-black);
-    padding: 1rem;
-    box-shadow: 0px 4px 0px var(--border-black);
-    text-align: center;
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: 8px 8px 0px var(--border-black);
 }
 
-.status-bar {
-    position: sticky;
-    z-index: 90;
-    border: 3px solid var(--border-black);
-    background-color: var(--terminal-gray);
-    padding: 0.8rem;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-weight: bold;
-}
+.setup-container h2 { font-size: 2rem; margin-bottom: 0.25rem; }
 
-.status-bar.error { background-color: #ffcccc; }
-
-#score-table thead th {
-    position: sticky;
-    z-index: 80;
-    background-color: var(--terminal-gray);
-    border-bottom: 3px solid var(--border-black);
-    border-top: 3px solid var(--border-black);
-    padding: 0.8rem;
+.setup-container .subtitle {
     font-family: var(--font-mono);
-    text-transform: uppercase;
+    margin-bottom: 2rem; 
     font-size: 0.9rem;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-black); 
+    padding-bottom: 1rem;
 }
 
-/* Category column sticks to the left */
-#score-table th:first-child, 
-#score-table td:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 85;
-    background-color: var(--terminal-gray);
-    border-right: 2px solid var(--border-black);
+.player-count-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
-/* --- GAME UI --- */
-.dice-display { display: flex; justify-content: center; gap: 10px; margin-bottom: 1rem; }
+.setup-group {
+    margin-bottom: 15px; /* Restored clearance */
+}
+
+.setup-group input { width: 300px; display: block; }
+
+#start-game-btn { 
+    background-color: var(--text-black); 
+    color: var(--bg-white); 
+    margin-top: 1rem;
+    margin-right: 15px; /* Restored gap */
+}
+
+#score-only-btn { margin-top: 1rem; }
+
+/* --- GAME UI: REVERTED TO HORIZONTAL --- */
+.dice-container {
+    border: 3px solid var(--border-black);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background: var(--bg-white);
+    box-shadow: 6px 6px 0px var(--border-black);
+    text-align: center;
+}
+
+.dice-display {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 1.5rem;
+}
 
 .die {
     width: 60px; height: 60px;
@@ -113,24 +143,30 @@ select, input {
     display: flex; align-items: center; justify-content: center;
     font-size: 3.5rem; font-family: var(--font-mono);
     box-shadow: 4px 4px 0px var(--border-black);
-    cursor: pointer;
 }
 
 .die.held { background: black; color: white; }
 
+.status-bar {
+    border: 3px solid var(--border-black);
+    background: var(--terminal-gray);
+    padding: 0.8rem;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.status-bar.error { background: #ffcccc; }
+
 .table-container {
     overflow-x: auto;
     border: 3px solid var(--border-black);
-    margin-top: 1rem;
+    box-shadow: 6px 6px 0px var(--border-black);
 }
 
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-
-td { border: 1px solid var(--slate-gray); text-align: center; padding: 0.5rem; }
-
-td select { width: 100%; border: none; background: transparent; }
-
+th, td { border: 1px solid var(--slate-gray); padding: 0.8rem; }
+th { background: var(--terminal-gray); font-family: var(--font-mono); text-transform: uppercase; }
+td select { width: 100%; height: 100%; border: none; background: transparent; }
 .total-row { font-weight: bold; background: var(--terminal-gray); }
-
-/* Setup specific labels */
-label[for="player-count"] { font-family: var(--font-mono); text-transform: uppercase; font-size: 0.8rem; }

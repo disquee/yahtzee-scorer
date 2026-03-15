@@ -1,4 +1,4 @@
-// --- 1. Global State & Categories ---
+// --- 1. Global State ---
 const categories = [
     { id: 'ones', label: 'Ones', section: 'upper', options: [0, 1, 2, 3, 4, 5] },
     { id: 'twos', label: 'Twos', section: 'upper', options: [0, 2, 4, 6, 8, 10] },
@@ -21,11 +21,11 @@ const categories = [
     { id: 'grand_total', label: 'GRAND TOTAL', section: 'grand_calc', isCalc: true }
 ];
 
-let players = [];
-let isScoreOnly = false; 
-let optimizerEnabled = true; 
-let currentRound = 1;
+let players = [], isScoreOnly = false, optimizerEnabled = true, currentRound = 1;
+let diceValues = [1, 1, 1, 1, 1], heldDice = [false, false, false, false, false], rollsLeft = 3;
+const unicodeDice = ['-', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅']; 
 
+// Load persistent state
 try { 
     players = JSON.parse(localStorage.getItem('yachtPlayers')) || []; 
     isScoreOnly = JSON.parse(localStorage.getItem('yachtScoreOnly')) || false;
@@ -34,45 +34,14 @@ try {
     if (storedOpt !== null) optimizerEnabled = JSON.parse(storedOpt);
 } catch (e) {}
 
-let diceValues = [1, 1, 1, 1, 1];
-let heldDice = [false, false, false, false, false];
-let rollsLeft = 3;
-const unicodeDice = ['-', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅']; 
-let diceView = 'numbers'; 
-
-// --- 2. Setup Screen & View Routing ---
-function toggleViews() {
-    const setupDiv = document.getElementById('setup-container');
-    const gameDiv = document.getElementById('game-container');
-    const headerControls = document.getElementById('header-controls');
-    const diceContainer = document.querySelector('.dice-container');
-
-    if (players.length === 0) {
-        setupDiv.style.display = 'block';
-        gameDiv.style.display = 'none';
-        headerControls.style.display = 'none'; 
-        renderSetupUI();
-    } else {
-        setupDiv.style.display = 'none';
-        gameDiv.style.display = 'block';
-        headerControls.style.display = 'flex'; 
-        diceContainer.style.display = isScoreOnly ? 'none' : 'block';
-
-        const optBtn = document.getElementById('toggle-opt-btn');
-        if (optBtn) optBtn.innerText = optimizerEnabled ? 'Opt: ON' : 'Opt: OFF';
-
-        renderTable();
-        updateDiceUI();
-    }
-}
-
+// --- 2. Setup Mode ---
 function renderSetupUI() {
     const setupDiv = document.getElementById('setup-container');
     setupDiv.innerHTML = `
-        <h2>Welcome to Disqo's Yacht Game</h2>
+        <h2>WELCOME TO DISQO'S YACHT GAME</h2>
         <p class="subtitle">Use to score or play!</p>
         <div class="player-count-row">
-            <label for="player-count">How many players?</label>
+            <label for="player-count">HOW MANY PLAYERS?</label>
             <select id="player-count" onchange="generateNameInputs()">
                 <option value="1" selected>1 Player</option>
                 <option value="2">2 Players</option>
@@ -83,12 +52,12 @@ function renderSetupUI() {
             </select>
         </div>
         <div id="name-inputs-container"></div>
-        <div class="checkbox-row">
-            <input type="checkbox" id="optimizer-toggle" ${optimizerEnabled ? 'checked' : ''}>
-            <label for="optimizer-toggle">Enable Score Optimizer (🎯)</label>
+        <div class="checkbox-row" style="display:flex; align-items:center; gap:0.8rem; margin: 1.5rem 0;">
+            <input type="checkbox" id="optimizer-toggle" ${optimizerEnabled ? 'checked' : ''} style="appearance:auto; width:1.2rem; height:1.2rem;">
+            <label for="optimizer-toggle" style="font-family:var(--font-mono); font-size:0.9rem; text-transform:uppercase;">Enable Score Optimizer (🎯)</label>
         </div>
-        <button id="start-game-btn" onclick="startGame(false)">Start Game</button>
-        <button id="score-only-btn" onclick="startGame(true)">Score Card Only</button>
+        <button id="start-game-btn" onclick="startGame(false)">START GAME</button>
+        <button id="score-only-btn" onclick="startGame(true)">SCORE CARD ONLY</button>
     `;
     generateNameInputs(); 
 }
@@ -103,274 +72,163 @@ window.generateNameInputs = function() {
     container.innerHTML = html;
 };
 
-window.startGame = function(scoreOnlyMode) {
+window.startGame = function(mode) {
     const count = parseInt(document.getElementById('player-count').value, 10);
-    players = []; 
-    isScoreOnly = scoreOnlyMode; 
-    currentRound = 1;
-    
+    players = []; isScoreOnly = mode; currentRound = 1;
     const toggleEl = document.getElementById('optimizer-toggle');
     if (toggleEl) optimizerEnabled = toggleEl.checked;
-    
     for (let i = 1; i <= count; i++) {
-        const input = document.getElementById(`setup-name-${i}`);
-        let name = input.value.trim();
-        if (!name) name = `Player ${i}`; 
-        players.push({ name, scores: {} });
+        players.push({ name: document.getElementById(`setup-name-${i}`).value.trim() || `Player ${i}`, scores: {} });
     }
-    saveState();
-    resetDice();
-    toggleViews();
+    saveState(); toggleViews();
 };
 
-// --- 3. Math Engine ---
-function getPossibleScores(dice) {
-    if (rollsLeft === 3) return {};
-    const counts = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
-    let sum = 0;
-    dice.forEach(d => { counts[d]++; sum += d; });
-    const scores = {};
-    scores.ones = counts[1] * 1; scores.twos = counts[2] * 2; scores.threes = counts[3] * 3;
-    scores.fours = counts[4] * 4; scores.fives = counts[5] * 5; scores.sixes = counts[6] * 6;
-    const has3 = Object.values(counts).some(c => c >= 3);
-    const has4 = Object.values(counts).some(c => c >= 4);
-    const has5 = Object.values(counts).some(c => c === 5);
-    const has2 = Object.values(counts).some(c => c === 2);
-    scores.three_kind = has3 ? sum : 0;
-    scores.four_kind = has4 ? sum : 0;
-    scores.full_house = ((has3 && has2) || has5) ? 25 : 0; 
-    scores.yacht = has5 ? 50 : 0;
-    scores.yacht_bonus = has5 ? 100 : 0;
-    scores.chance = sum;
-    const uniqueDice = [...new Set(dice)].sort((a,b) => a-b);
-    const straightStr = uniqueDice.join('');
-    scores.sm_straight = /1234|2345|3456/.test(straightStr) ? 30 : 0;
-    scores.lg_straight = /12345|23456/.test(straightStr) ? 40 : 0;
-    return scores;
+// --- 3. View Routing & HUD ---
+function toggleViews() {
+    const setupDiv = document.getElementById('setup-container');
+    const gameDiv = document.getElementById('game-container');
+    const headerControls = document.getElementById('header-controls');
+    const diceContainer = document.querySelector('.dice-container');
+    if (players.length === 0) {
+        setupDiv.style.display = 'block'; gameDiv.style.display = 'none'; headerControls.style.display = 'none';
+        renderSetupUI();
+    } else {
+        setupDiv.style.display = 'none'; gameDiv.style.display = 'block'; headerControls.style.display = 'flex';
+        diceContainer.style.display = isScoreOnly ? 'none' : 'block';
+        
+        // Sync header button text
+        const optBtn = document.getElementById('toggle-opt-btn');
+        if (optBtn) optBtn.innerText = optimizerEnabled ? 'Opt: ON' : 'Opt: OFF';
+
+        renderTable(); updateDiceUI();
+    }
 }
 
-// --- 4. Core Logic & Rendering ---
-function saveState() {
-    try { 
-        localStorage.setItem('yachtPlayers', JSON.stringify(players)); 
-        localStorage.setItem('yachtScoreOnly', JSON.stringify(isScoreOnly)); 
-        localStorage.setItem('yachtOptimizer', JSON.stringify(optimizerEnabled)); 
-        localStorage.setItem('yachtRound', JSON.stringify(currentRound));
-    } catch (e) {}
+function updateDiceUI() {
+    for (let i = 0; i < 5; i++) {
+        const el = document.getElementById(`die-${i}`);
+        if (!el) continue;
+        el.innerText = (rollsLeft === 3 && !heldDice[i]) ? '-' : unicodeDice[diceValues[i]];
+        el.className = `die ${heldDice[i] ? 'held' : ''}`;
+    }
+    const sb = document.getElementById('status-bar');
+    if (sb) sb.style.display = (!isScoreOnly && rollsLeft === 3) ? 'block' : 'none';
+    const rEl = document.getElementById('rolls-left');
+    if (rEl) rEl.innerText = `ROUND: ${currentRound}/13 | ROLLS LEFT: ${rollsLeft}`;
+    const rBtn = document.getElementById('roll-btn');
+    if (rBtn) rBtn.disabled = (rollsLeft === 0 || currentRound > 13);
+    updateStickyOffsets();
 }
 
+// --- 4. Core Logic ---
 function renderTable() {
     const table = document.getElementById('score-table');
     const possibleScores = (rollsLeft < 3) ? getPossibleScores(diceValues) : {};
-    
-    // BUILD HEADER
     let html = '<thead><tr><th>Category</th>';
-    players.forEach((p, index) => {
-        // Wrapped name in a span for better alignment when sticky
-        html += `<th><span>${p.name}</span><br><button onclick="removePlayer(${index})">Remove</button></th>`;
-    });
-    html += '</tr></thead>';
+    players.forEach((p, index) => html += `<th>${p.name}<br><button onclick="removePlayer(${index})" style="font-size:0.7rem; padding:2px 5px;">Remove</button></th>`);
+    html += '</tr></thead><tbody>';
 
-    // BUILD BODY
-    html += '<tbody>';
     categories.forEach(cat => {
         const rowClass = cat.isCalc ? 'total-row' : 'category-row';
         html += `<tr class="${rowClass}"><td>${cat.label}</td>`;
-        players.forEach((p, pIndex) => {
+        players.forEach((p, pIdx) => {
             if (cat.isCalc) {
-                html += `<td id="calc-${pIndex}-${cat.id}">${p.scores[cat.id] || 0}</td>`;
+                html += `<td id="calc-${pIdx}-${cat.id}">${p.scores[cat.id] || 0}</td>`;
             } else {
-                let optionsHtml = `<option value=""></option>`; 
-                const possibleScore = possibleScores[cat.id];
-                const currentScore = p.scores[cat.id];
-                const isLocked = (!isScoreOnly && rollsLeft === 3);
-
+                const possible = possibleScores[cat.id], current = p.scores[cat.id], isLocked = (!isScoreOnly && rollsLeft === 3);
+                let optHtml = `<option value=""></option>`; 
                 if (!isScoreOnly && rollsLeft < 3) {
-                    if (currentScore !== undefined) {
-                        optionsHtml += `<option value="${currentScore}" selected>${currentScore}</option>`;
-                    } else {
-                        const displayVal = (optimizerEnabled && possibleScore > 0) ? `🎯 ${possibleScore}` : possibleScore;
-                        optionsHtml += `<option value="${possibleScore}">${displayVal}</option>`;
-                    }
+                    if (current !== undefined) optHtml += `<option value="${current}" selected>${current}</option>`;
+                    // Only show 🎯 suggestion if optimizerEnabled is true
+                    else optHtml += `<option value="${possible}">${(optimizerEnabled && possible > 0) ? `🎯 ${possible}` : possible}</option>`;
                 } else {
-                    cat.options.forEach(opt => {
-                        const selected = currentScore === opt ? 'selected' : '';
-                        optionsHtml += `<option value="${opt}" ${selected}>${opt}</option>`;
-                    });
+                    cat.options.forEach(o => optHtml += `<option value="${o}" ${current === o ? 'selected' : ''}>${o}</option>`);
                 }
-                
-                const shouldHighlight = (optimizerEnabled && !isScoreOnly && rollsLeft < 3 && currentScore === undefined && possibleScore > 0);
-                const selectStyle = shouldHighlight ? 'background-color: #e8f4f8; border-color: #000; font-weight: bold;' : '';
-                const disabledAttr = isLocked ? 'disabled' : '';
-                
-                html += `<td><select ${disabledAttr} onchange="updateScore(${pIndex}, '${cat.id}', this.value)" style="${selectStyle}">${optionsHtml}</select></td>`;
+                // Only show blue background highlight if optimizerEnabled is true
+                const style = (optimizerEnabled && !isScoreOnly && rollsLeft < 3 && current === undefined && possible > 0) ? 'background:#e8f4f8; font-weight:bold;' : '';
+                html += `<td><select ${isLocked ? 'disabled' : ''} onchange="updateScore(${pIdx}, '${cat.id}', this.value)" style="${style}">${optHtml}</select></td>`;
             }
         });
         html += '</tr>';
     });
-    html += '</tbody>';
-    
-    table.innerHTML = html;
+    table.innerHTML = html + '</tbody>';
     calculateTotals();
+    updateStickyOffsets();
 }
 
-window.updateScore = function(playerIndex, categoryId, value) {
-    if (value === "") delete players[playerIndex].scores[categoryId];
-    else players[playerIndex].scores[categoryId] = parseInt(value, 10);
-    
-    const totalScoresEntered = players.reduce((sum, p) => sum + Object.keys(p.scores).filter(k => !categories.find(c => c.id === k).isCalc).length, 0);
-    const expectedScores = currentRound * players.length;
-
-    if (totalScoresEntered >= expectedScores) {
-        if (currentRound < 13) currentRound++;
-        else handleGameOver();
-    }
-
-    saveState();
-    calculateTotals();
-    if (!isScoreOnly) resetDice(); 
-    else renderTable();
-};
-
-function handleGameOver() {
-    saveState();
-    renderTable();
-    let winner = players[0];
-    players.forEach(p => { if (p.scores.grand_total > winner.scores.grand_total) winner = p; });
-    setTimeout(() => {
-        alert(`GAME OVER!\nWinner: ${winner.name} with ${winner.scores.grand_total} points.`);
-    }, 500);
-}
-
-window.removePlayer = function(index) {
-    players.splice(index, 1);
-    saveState();
-    toggleViews(); 
+window.updateScore = function(pIdx, catId, val) {
+    if (val === "") delete players[pIdx].scores[catId];
+    else players[pIdx].scores[catId] = parseInt(val, 10);
+    const total = players.reduce((s, p) => s + Object.keys(p.scores).filter(k => !categories.find(c => c.id === k).isCalc).length, 0);
+    if (total >= currentRound * players.length && currentRound < 13) currentRound++;
+    saveState(); calculateTotals();
+    if (!isScoreOnly) resetDice(); else renderTable();
 };
 
 function calculateTotals() {
     players.forEach((p, index) => {
-        let upperSum = 0;
-        ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].forEach(id => { upperSum += p.scores[id] || 0; });
-        const bonus = upperSum >= 63 ? 35 : 0;
-        const upperTotal = upperSum + bonus;
-        let lowerSum = 0;
-        ['three_kind', 'four_kind', 'full_house', 'sm_straight', 'lg_straight', 'yacht', 'yacht_bonus', 'chance'].forEach(id => { lowerSum += p.scores[id] || 0; });
-        p.scores.upper_sum = upperSum; p.scores.bonus = bonus; p.scores.upper_total = upperTotal;
-        p.scores.lower_total = lowerSum; p.scores.grand_total = upperTotal + lowerSum;
-
-        if (document.getElementById(`calc-${index}-upper_sum`)) {
-            document.getElementById(`calc-${index}-upper_sum`).innerText = upperSum;
-            document.getElementById(`calc-${index}-bonus`).innerText = bonus;
-            document.getElementById(`calc-${index}-upper_total`).innerText = upperTotal;
-            document.getElementById(`calc-${index}-lower_total`).innerText = lowerSum;
-            document.getElementById(`calc-${index}-grand_total`).innerText = p.scores.grand_total;
-        }
+        let uSum = 0; ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].forEach(id => uSum += p.scores[id] || 0);
+        let lSum = 0; ['three_kind', 'four_kind', 'full_house', 'sm_straight', 'lg_straight', 'yacht', 'yacht_bonus', 'chance'].forEach(id => lSum += p.scores[id] || 0);
+        p.scores.upper_sum = uSum; p.scores.bonus = uSum >= 63 ? 35 : 0; p.scores.upper_total = uSum + p.scores.bonus;
+        p.scores.lower_total = lSum; p.scores.grand_total = p.scores.upper_total + lSum;
+        ['upper_sum', 'bonus', 'upper_total', 'lower_total', 'grand_total'].forEach(id => {
+            const el = document.getElementById(`calc-${index}-${id}`); if (el) el.innerText = p.scores[id];
+        });
     });
 }
 
-// --- 5. Dice Roller UI & Actions ---
-window.toggleDiceView = function() {
-    diceView = (diceView === 'numbers') ? 'dice' : 'numbers';
-    const viewBtn = document.getElementById('toggle-view-btn');
-    if (viewBtn) viewBtn.innerText = (diceView === 'numbers') ? 'View: Dice' : 'View: Numbers';
-    updateDiceUI();
-};
-
-function updateDiceUI() {
-    for (let i = 0; i < 5; i++) {
-        const dieEl = document.getElementById(`die-${i}`);
-        if (!dieEl) continue;
-        if (rollsLeft === 3 && !heldDice[i]) dieEl.innerText = '-';
-        else dieEl.innerText = (diceView === 'numbers') ? diceValues[i] : unicodeDice[diceValues[i]];
-        if (heldDice[i]) dieEl.classList.add('held');
-        else dieEl.classList.remove('held');
-    }
-
-    const statusBar = document.getElementById('status-bar');
-    if (statusBar) {
-        if (!isScoreOnly && rollsLeft === 3) {
-            statusBar.style.display = 'block';
-            statusBar.classList.add('error');
-            statusBar.innerText = "Roll dice to add score!";
-        } else if (currentRound > 13) {
-            statusBar.style.display = 'block';
-            statusBar.classList.remove('error');
-            statusBar.innerText = "GAME OVER!";
-        } else {
-            statusBar.style.display = 'none';
-        }
-    }
-
-    const rollsEl = document.getElementById('rolls-left');
-    if (rollsEl) rollsEl.innerText = `Round: ${currentRound}/13 | Rolls left: ${rollsLeft}`;
-    const rollBtn = document.getElementById('roll-btn');
-    if (rollBtn) rollBtn.disabled = (rollsLeft === 0 || currentRound > 13);
+function getPossibleScores(dice) {
+    if (rollsLeft === 3) return {};
+    const counts = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
+    let sum = 0; dice.forEach(d => { counts[d]++; sum += d; });
+    const s = {};
+    s.ones = counts[1] * 1; s.twos = counts[2] * 2; s.threes = counts[3] * 3;
+    s.fours = counts[4] * 4; s.fives = counts[5] * 5; s.sixes = counts[6] * 6;
+    const has3 = Object.values(counts).some(c => c >= 3), has4 = Object.values(counts).some(c => c >= 4), has5 = Object.values(counts).some(c => c === 5), has2 = Object.values(counts).some(c => c === 2);
+    s.three_kind = has3 ? sum : 0; s.four_kind = has4 ? sum : 0; s.full_house = ((has3 && has2) || has5) ? 25 : 0; s.yacht = has5 ? 50 : 0; s.yacht_bonus = has5 ? 100 : 0; s.chance = sum;
+    const unique = [...new Set(dice)].sort((a,b) => a-b).join('');
+    s.sm_straight = /1234|2345|3456/.test(unique) ? 30 : 0; s.lg_straight = /12345|23456/.test(unique) ? 40 : 0;
+    return s;
 }
 
-window.toggleHold = function(index) {
-    if (rollsLeft === 3) return; 
-    heldDice[index] = !heldDice[index];
-    updateDiceUI();
-};
+// Sticky Offsets for the layer-cake HUD
+function updateStickyOffsets() {
+    const diceHUD = document.querySelector('.dice-container'), sb = document.getElementById('status-bar'), ths = document.querySelectorAll('#score-table thead th');
+    if (!diceHUD || isScoreOnly || diceHUD.style.display === 'none') return;
+    const h = diceHUD.offsetHeight;
+    if (sb && sb.style.display !== 'none') {
+        sb.style.top = `${h - 3}px`;
+        const combined = h + sb.offsetHeight - 6;
+        ths.forEach(th => th.style.top = `${combined}px`);
+    } else {
+        ths.forEach(th => th.style.top = `${h - 3}px`);
+    }
+}
 
-// --- 6. Initialization & Listeners ---
+// --- 5. Listeners & Global Helpers ---
 document.addEventListener('DOMContentLoaded', () => {
-    // We attach the listener directly to the button by ID
-    const rollBtn = document.getElementById('roll-btn');
-    if (rollBtn) {
-        rollBtn.addEventListener('click', () => {
-            if (rollsLeft > 0 && currentRound <= 13) {
-                for (let i = 0; i < 5; i++) {
-                    if (!heldDice[i]) diceValues[i] = Math.floor(Math.random() * 6) + 1;
-                }
-                rollsLeft--;
-                updateDiceUI();
-                renderTable(); 
-            }
-        });
-    }
-
-    const resetBtn = document.getElementById('reset-btn');
-    let resetTapCount = 0;
-    if (resetBtn) {
-        resetBtn.addEventListener('click', (e) => {
-            if (resetTapCount === 0) {
-                e.target.innerText = "Sure?";
-                e.target.style.background = "#ffcccc";
-                resetTapCount++;
-                setTimeout(() => {
-                    e.target.innerText = "Reset";
-                    e.target.style.background = "var(--bg-white)";
-                    resetTapCount = 0;
-                }, 3000);
-            } else {
-                players = []; 
-                currentRound = 1;
-                saveState();
-                resetDice();
-                toggleViews(); 
-                e.target.innerText = "Reset";
-                e.target.style.background = "var(--bg-white)";
-                resetTapCount = 0;
-            }
-        });
-    }
-
+    document.getElementById('roll-btn').addEventListener('click', () => {
+        if (rollsLeft > 0 && currentRound <= 13) {
+            for (let i = 0; i < 5; i++) if (!heldDice[i]) diceValues[i] = Math.floor(Math.random() * 6) + 1;
+            rollsLeft--; updateDiceUI(); renderTable(); 
+        }
+    });
+    document.getElementById('reset-btn').addEventListener('click', () => { 
+        players = []; currentRound = 1; saveState(); resetDice(); toggleViews(); 
+    });
     toggleViews();
+    window.addEventListener('resize', updateStickyOffsets);
 });
 
-window.toggleOptimizer = function() {
-    optimizerEnabled = !optimizerEnabled;
+window.toggleOptimizer = () => { 
+    optimizerEnabled = !optimizerEnabled; 
     saveState(); 
     const optBtn = document.getElementById('toggle-opt-btn');
     if (optBtn) optBtn.innerText = optimizerEnabled ? 'Opt: ON' : 'Opt: OFF';
     renderTable(); 
 };
 
-window.resetDice = function() {
-    heldDice = [false, false, false, false, false];
-    rollsLeft = 3;
-    updateDiceUI();
-    if(players.length > 0) renderTable();
-};
+window.toggleHold = (i) => { if (rollsLeft < 3) { heldDice[i] = !heldDice[i]; updateDiceUI(); } };
+window.resetDice = () => { heldDice = [false, false, false, false, false]; rollsLeft = 3; updateDiceUI(); if(players.length > 0) renderTable(); };
+window.removePlayer = (i) => { players.splice(i, 1); saveState(); toggleViews(); };
+function saveState() { localStorage.setItem('yachtPlayers', JSON.stringify(players)); localStorage.setItem('yachtScoreOnly', JSON.stringify(isScoreOnly)); localStorage.setItem('yachtOptimizer', JSON.stringify(optimizerEnabled)); localStorage.setItem('yachtRound', JSON.stringify(currentRound)); }
