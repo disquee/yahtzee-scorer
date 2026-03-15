@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yahtzee-v3';
+const CACHE_NAME = 'yahtzee-v4';
 const ASSETS = [
     './',
     './index.html',
@@ -8,7 +8,7 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-    self.skipWaiting(); // Force the new version to take over immediately
+    self.skipWaiting(); 
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => cache.addAll(ASSETS))
@@ -16,7 +16,6 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-    // Delete any old caches (like v1 or v2) so we don't get stuck again
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(

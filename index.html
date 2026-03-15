@@ -10,7 +10,7 @@
 </head>
 <body>
     <header>
-        <h1>Yahtzee</h1>
+        <h1>Yahtzee <span style="font-size: 0.5em; opacity: 0.5;">v4</span></h1>
         <div class="controls">
             <input type="text" id="new-player-name" placeholder="Name..." maxlength="12">
             <button id="add-player-btn">+ Add</button>
@@ -27,7 +27,6 @@
 
     <script src="app.js"></script>
     <script>
-        // Register Service Worker for Offline Support
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
