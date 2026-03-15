@@ -1,4 +1,5 @@
-const CACHE_NAME = 'yahtzee-v1';
+const CACHE_NAME = 'yahtzee-v2'; 
+
 const ASSETS = [
     './',
     './index.html',
