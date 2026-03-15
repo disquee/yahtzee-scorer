@@ -22,11 +22,24 @@ const categories = [
     { id: 'grand_total', label: 'GRAND TOTAL', section: 'grand_calc', isCalc: true }
 ];
 
-let players = JSON.parse(localStorage.getItem('yahtzeePlayers')) || [];
+// ... categories array stays the same ...
+
+let players = [];
+try {
+    players = JSON.parse(localStorage.getItem('yahtzeePlayers')) || [];
+} catch (e) {
+    console.warn("Private browsing detected: LocalStorage is disabled. State won't save on refresh.");
+}
 
 function saveState() {
-    localStorage.setItem('yahtzeePlayers', JSON.stringify(players));
+    try {
+        localStorage.setItem('yahtzeePlayers', JSON.stringify(players));
+    } catch (e) {
+        // Fail silently in private browsing so the app doesn't crash
+    }
 }
+
+// ... rest of the functions (renderTable, calculateTotals, etc.) stay the same ...
 
 function renderTable() {
     const table = document.getElementById('score-table');
