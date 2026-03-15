@@ -3,37 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yahtzee Score Sheet</title>
+    <title>Disqo's Yacht Game</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#333333">
 </head>
 <body>
     <header>
-        <h1>Yahtzee <span style="font-size: 0.5em; opacity: 0.5;">v5</span></h1>
-        <div class="controls">
-            <input type="text" id="new-player-name" placeholder="Name..." maxlength="12">
-            <button id="add-player-btn">+ Add</button>
+        <h1>DISQO'S YACHT GAME <span style="font-size: 0.5em; opacity: 0.5;">v5</span></h1>
+        <div class="controls" id="header-controls" style="display: none;">
+            <button id="toggle-opt-btn" onclick="toggleOptimizer()">Opt: ON</button>
             <button id="reset-btn">Reset</button>
         </div>
     </header>
     
     <main>
-        <div class="table-container">
-            <table id="score-table">
-                </table>
+        <div id="setup-container" class="setup-container">
+            </div>
+
+        <div id="game-container" style="display: none;">
+            <div class="dice-container">
+                <div class="dice-display">
+                    <div class="die" onclick="toggleHold(0)" id="die-0">-</div>
+                    <div class="die" onclick="toggleHold(1)" id="die-1">-</div>
+                    <div class="die" onclick="toggleHold(2)" id="die-2">-</div>
+                    <div class="die" onclick="toggleHold(3)" id="die-3">-</div>
+                    <div class="die" onclick="toggleHold(4)" id="die-4">-</div>
+                </div>
+                <div class="dice-controls">
+                    <button id="roll-btn">Roll Dice</button>
+                    <button id="toggle-view-btn" onclick="toggleDiceView()">View: Dice</button>
+                    <span id="rolls-left">Rolls left: 3</span>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table id="score-table">
+                    </table>
+            </div>
         </div>
     </main>
 
     <script src="app-v5.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.error('Service Worker failure:', err));
-            });
-        }
-    </script>
 </body>
 </html>

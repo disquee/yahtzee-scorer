@@ -1,6 +1,6 @@
 {
-  "name": "Yahtzee Score Sheet",
-  "short_name": "Yahtzee",
+  "name": "Yacht Score Sheet",
+  "short_name": "Yacht",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#333333",

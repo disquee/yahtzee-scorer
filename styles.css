@@ -1,21 +1,407 @@
-/* Replace input styles with select styles */
-select { 
-    width: 100%; 
-    border: 1px solid var(--border); 
-    border-radius: 4px; 
-    text-align: center; 
-    font-size: 1rem; 
-    padding: 0.25rem; 
-    background: white; 
-    appearance: menulist;
-    cursor: pointer;
+/* --- BRUTALIST, DOCS-AS-CODE AESTHETIC --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+
+:root {
+    --bg-white: #FFFFFF;
+    --text-black: #000000;
+    --border-black: #000000;
+    --slate-gray: #4B5563;
+    --terminal-gray: #F3F4F6;
+    
+    /* Typographic Hierarchy locked to brand standards */
+    --font-mono: 'Roboto Mono', 'Courier New', Courier, monospace;
+    --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
-select:focus { 
-    border-color: var(--primary); 
-    outline: none; 
-    box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.2);
+/* --- BASE STYLES --- */
+body {
+    background-color: var(--bg-white);
+    color: var(--text-black);
+    font-family: var(--font-sans); /* Base narrative text */
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
 }
-/* Header Controls UI */
-.controls { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-#new-player-name { width: 100px; padding: 0.4rem; border: 1px solid white; border-radius: 4px; text-align: left; font-size: 0.9rem; }
+
+main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    margin: 0;
+}
+
+/* --- HEADER UI --- */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 3px solid var(--border-black);
+    background: var(--bg-white);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+header h1 {
+    font-size: 2rem;
+}
+
+.controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* --- BRUTALIST BUTTONS & INPUTS --- */
+button {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-weight: bold;
+    background-color: var(--bg-white);
+    color: var(--text-black);
+    border: 2px solid var(--border-black);
+    border-radius: 0; /* Sharp corners */
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    box-shadow: 4px 4px 0px var(--border-black);
+    transition: all 0.1s ease-in-out;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+button:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px var(--border-black);
+}
+
+button:disabled {
+    background-color: var(--terminal-gray);
+    color: var(--slate-gray);
+    border-color: var(--slate-gray);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+input {
+    font-family: var(--font-mono);
+    border: 2px solid var(--border-black);
+    border-radius: 0;
+    padding: 0.6rem;
+    background: var(--terminal-gray);
+    color: var(--text-black);
+    font-size: 1rem;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+select {
+    font-family: var(--font-mono);
+    border: 2px solid var(--border-black);
+    border-radius: 0;
+    padding: 0.6rem 2.5rem 0.6rem 0.6rem; /* Pushes text left to make room for arrow */
+    background: var(--terminal-gray);
+    color: var(--text-black);
+    font-size: 1rem;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    /* Bulletproof URL-encoded SVG down-arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='3' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+}
+
+input:focus, select:focus {
+    outline: none;
+    background: var(--bg-white);
+    border-color: var(--text-black);
+}
+
+input:focus, select:focus {
+    outline: none;
+    background: var(--bg-white);
+    border-color: var(--text-black);
+}
+
+/* --- SETUP SCREEN --- */
+.setup-container {
+    background: var(--bg-white);
+    border: 3px solid var(--border-black);
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: 8px 8px 0px var(--border-black);
+}
+
+.setup-container h2 {
+    font-size: 2rem;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+    line-height: 1.1;
+}
+
+/* Increased contrast on the subtitle */
+.setup-container .subtitle {
+    font-family: var(--font-mono);
+    color: var(--text-black); 
+    margin-top: 0;
+    margin-bottom: 2rem; 
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-black); 
+    padding-bottom: 1rem;
+}
+
+/* Side-by-side layout for the player count selector */
+.player-count-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem; /* Creates the space between the select button and the first name input */
+}
+
+/* Forces the monospace font to match the subtitle */
+/* Absolute override for the "How many players?" label */
+label[for="player-count"] {
+    font-family: var(--font-mono) !important; /* Forces Roboto Mono */
+    font-size: 0.9rem !important; /* Matches subtitle size */
+    font-weight: normal !important; /* Strips bold */
+    text-transform: uppercase !important; /* Matches subtitle capitalization */
+    letter-spacing: 0.5px !important; /* Matches subtitle spacing */
+    color: var(--text-black) !important;
+    margin: 0 !important;
+}
+
+/* Brutalist Dropdown (Inherits arrow from the main select rule) */
+.player-count-row select {
+    padding: 0.8rem 2.5rem 0.8rem 1rem; /* Extra right padding for the arrow */
+    font-size: 1.1rem;
+}
+
+/* Spacing between player name inputs */
+.setup-group {
+    margin-bottom: 12px; /* Forces the physical space between the stacked name inputs */
+    text-align: left;
+}
+
+.setup-group input {
+    font-family: var(--font-mono);
+    border: 2px solid var(--border-black);
+    border-radius: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1rem; /* Chunky padding so the text isn't cramped */
+    background: var(--terminal-gray);
+    color: var(--text-black);
+    font-size: 1rem;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.setup-group input:focus {
+    outline: none;
+    background: var(--bg-white);
+}
+
+/* Brutalist Checkbox for Settings */
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+    margin-top: 1rem;
+}
+
+.checkbox-row input[type="checkbox"] {
+    -webkit-appearance: auto; /* Forces the browser to draw the checkbox */
+    appearance: auto;
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+    accent-color: var(--text-black); /* Makes the checkmark black instead of default blue */
+    margin: 0;
+    padding: 0;
+}
+
+.checkbox-row label {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: var(--text-black);
+    cursor: pointer;
+    margin: 0;
+}
+
+#start-game-btn {
+    width: 100%;
+    background-color: var(--text-black);
+    color: var(--bg-white);
+    font-size: 1.2rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+#start-game-btn:active {
+    background-color: var(--slate-gray);
+}
+
+/* Secondary Brutalist Button for Score Card Only */
+#score-only-btn {
+    width: 100%;
+    background-color: var(--bg-white);
+    color: var(--text-black);
+    font-size: 1.2rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+#score-only-btn:active {
+    background-color: var(--terminal-gray);
+}
+
+/* --- DICE ROLLER UI --- */
+.dice-container {
+    border: 3px solid var(--border-black);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background: var(--bg-white);
+    box-shadow: 6px 6px 0px var(--border-black);
+    text-align: center;
+}
+
+.dice-display {
+    display: flex;
+    flex-direction: row; /* Strictly forces horizontal layout */
+    justify-content: center;
+    flex-wrap: nowrap; /* Prevents dice from stacking on mobile */
+    gap: 15px;
+    margin-bottom: 1.5rem;
+}
+
+.die {
+    width: 60px; /* Bumped up for a better mobile touch target */
+    height: 60px;
+    flex-shrink: 0;
+    background: var(--bg-white);
+    border: 2px solid var(--border-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem; /* Massively scaled up to push edge-to-edge */
+    line-height: 1; /* Prevents the browser from clipping the top/bottom */
+    font-family: var(--font-mono);
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 4px 4px 0px var(--border-black);
+    transition: all 0.1s ease-in-out;
+}
+
+.die.held {
+    background: var(--text-black);
+    color: var(--bg-white);
+    box-shadow: 0px 0px 0px var(--border-black);
+    transform: translate(4px, 4px);
+}
+
+.dice-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap; /* Allows the buttons to wrap nicely if the screen gets too thin */
+}
+
+#rolls-left {
+    font-family: var(--font-mono);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* --- SCORE TABLE (DOCS-AS-CODE) --- */
+.table-container {
+    overflow-x: auto;
+    border: 3px solid var(--border-black);
+    box-shadow: 6px 6px 0px var(--border-black);
+}
+
+table {
+    width: 100%;
+    table-layout: fixed; /* THE MAGIC BULLET: Forces identical column widths */
+    border-collapse: collapse;
+    background: var(--bg-white);
+}
+
+/* Locks the category name column to a specific width */
+th:first-child, td:first-child {
+    width: 140px; 
+}
+
+th, td {
+    border: 1px solid var(--slate-gray);
+    text-align: left;
+    overflow: hidden; 
+    text-overflow: ellipsis;
+}
+
+th {
+    background-color: var(--terminal-gray);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    border-bottom: 2px solid var(--border-black);
+    text-align: center;
+    padding: 0.8rem;
+}
+
+td {
+    font-size: 1rem;
+    padding: 0; /* Removes padding so the select dropdown can stretch 100% of the box */
+}
+
+/* Re-adds padding only to text/calculation rows */
+.total-row td, td:first-child {
+    padding: 0.8rem;
+}
+
+.total-row td {
+    font-weight: bold;
+    background-color: var(--terminal-gray);
+    font-family: var(--font-mono);
+    border-top: 2px solid var(--border-black);
+}
+
+/* Forces every select box to perfectly fill its container */
+td select {
+    width: 100%;
+    height: 100%;
+    padding: 0.8rem 0.2rem; 
+    font-size: 1rem;
+    border: 2px solid transparent; /* Prevents border jump */
+    background-color: transparent; 
+    text-align: center; 
+    background-position: right 4px center; /* Tucks the arrow tightly to the right */
+}
+
+td select:focus {
+    border: 2px solid var(--border-black);
+    background-color: var(--bg-white);
+}
+
+/* Mini Remove buttons inside the headers */
+th button {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    margin-top: 6px;
+    background: var(--bg-white);
+    box-shadow: 2px 2px 0px var(--border-black);
+    width: auto;
+}
