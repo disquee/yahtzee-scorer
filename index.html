@@ -2,50 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Disqo's Yacht Game</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#333333">
 </head>
 <body>
     <header>
-        <h1>DISQO'S YACHT GAME <span style="font-size: 0.5em; opacity: 0.5;">v5</span></h1>
+        <h1>DISQO'S YACHT GAME <small>V5</small></h1>
         <div class="controls" id="header-controls" style="display: none;">
             <button id="toggle-opt-btn" onclick="toggleOptimizer()">Opt: ON</button>
-            <button id="reset-btn">Reset</button>
+            <button id="reset-btn">RESET</button>
         </div>
     </header>
-    
     <main>
-        <div id="setup-container" class="setup-container">
-            </div>
-
+        <div id="setup-container"></div>
         <div id="game-container" style="display: none;">
             <div class="dice-container">
                 <div class="dice-display">
-                    <div class="die" onclick="toggleHold(0)" id="die-0">-</div>
-                    <div class="die" onclick="toggleHold(1)" id="die-1">-</div>
-                    <div class="die" onclick="toggleHold(2)" id="die-2">-</div>
-                    <div class="die" onclick="toggleHold(3)" id="die-3">-</div>
-                    <div class="die" onclick="toggleHold(4)" id="die-4">-</div>
+                    <div id="die-0" class="die" onclick="toggleHold(0)">-</div>
+                    <div id="die-1" class="die" onclick="toggleHold(1)">-</div>
+                    <div id="die-2" class="die" onclick="toggleHold(2)">-</div>
+                    <div id="die-3" class="die" onclick="toggleHold(3)">-</div>
+                    <div id="die-4" class="die" onclick="toggleHold(4)">-</div>
                 </div>
                 <div class="dice-controls">
-                    <button id="roll-btn">Roll Dice</button>
-                    <button id="toggle-view-btn" onclick="toggleDiceView()">View: Dice</button>
-                    <span id="rolls-left">Rolls left: 3</span>
+                    <button id="roll-btn">ROLL DICE</button>
+                    <button id="toggle-view-btn" onclick="toggleDiceView()">VIEW: DICE</button>
+                    <span id="rolls-left">ROUND: 1/13 | ROLLS LEFT: 3</span>
                 </div>
             </div>
-        <div id="status-bar" class="status-bar" style="display: none;">
-    ROLL DICE TO ADD SCORE!
-        </div>
+            <div id="status-bar" class="status-bar" style="display: none;"></div>
             <div class="table-container">
-                <table id="score-table">
-                    </table>
+                <table id="score-table"></table>
             </div>
         </div>
     </main>
-
     <script src="app-v5.js"></script>
 </body>
 </html>
