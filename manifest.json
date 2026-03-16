@@ -1,15 +1,21 @@
 {
-  "name": "Yacht Score Sheet",
-  "short_name": "Yacht",
-  "start_url": ".",
+  "name": "Disqo's Yacht Party",
+  "short_name": "Yacht Party",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#333333",
-  "theme_color": "#333333",
+  "background_color": "#FFFFFF",
+  "theme_color": "#000000",
+  "description": "A Brutalist dice game.",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Dice-1.svg",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }

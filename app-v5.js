@@ -8,7 +8,7 @@ const categories = [
     { id: 'lower_total', label: 'LOWER TOTAL', isCalc: true }, { id: 'grand_total', label: 'GRAND TOTAL', isCalc: true }
 ];
 
-let players = [], rollsLeft = 3, currentRound = 1, optimizerEnabled = true, isScoreOnly = false;
+let players = [], rollsLeft = 3, currentRound = 1, optimizerEnabled = false, isScoreOnly = false;
 let diceValues = [1, 1, 1, 1, 1], heldDice = [false, false, false, false, false], diceView = 'dice';
 const unicodeDice = ['-', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
@@ -29,11 +29,11 @@ function renderTable() {
                 bHtml += `<td id="calc-${pIdx}-${cat.id}">${p.scores[cat.id] || 0}</td>`;
             } else {
                 const possible = possibleScores[cat.id] || 0, current = p.scores[cat.id], isLocked = (!isScoreOnly && rollsLeft === 3);
-                let optStyle = (optimizerEnabled && !isScoreOnly && rollsLeft < 3 && current === undefined && possible > 0) ? 'background:#e8f4f8; font-weight:bold;' : '';
+                let optStyle = (optimizerEnabled && !isScoreOnly && rollsLeft < 3 && current === undefined && possible > 0) ? 'background:#beddff; color:#000; font-weight:bold;' : '';
                 bHtml += `<td><select ${isLocked ? 'disabled' : ''} onchange="updateScore(${pIdx}, '${cat.id}', this.value)" style="${optStyle}">`;
                 bHtml += `<option value=""></option>`;
                 if (current !== undefined) bHtml += `<option value="${current}" selected>${current}</option>`;
-                else if (!isScoreOnly && rollsLeft < 3) bHtml += `<option value="${possible}">${(optimizerEnabled && possible > 0) ? '🎯 ' + possible : possible}</option>`;
+                else if (!isScoreOnly && rollsLeft < 3) bHtml += `<option value="${possible}">${(optimizerEnabled && possible > 0) ? '✏️ ' + possible : possible}</option>`;
                 else [0, 5, 10, 15, 20, 25, 30, 40, 50].forEach(v => bHtml += `<option value="${v}">${v}</option>`);
                 bHtml += `</select></td>`;
             }
@@ -68,7 +68,7 @@ function updateDiceUI() {
 function renderSetupUI() {
     document.getElementById('setup-container').innerHTML = `
         <div class="setup-container">
-            <h2>WELCOME TO DISQO'S YACHT GAME</h2><p class="subtitle">Use to score or play!</p>
+            <h2>WELCOME TO DISQO'S YACHT PARTY</h2>
             <div class="player-count-row"><label>HOW MANY PLAYERS?</label>
                 <select id="player-count" onchange="generateNameInputs()">
                     <option value="1">1 Player</option><option value="2">2 Players</option>
@@ -97,9 +97,25 @@ window.startGame = (mode) => {
 };
 
 function toggleViews() {
-    const s = document.getElementById('setup-container'), g = document.getElementById('game-container'), h = document.getElementById('header-controls');
-    if (players.length === 0) { s.style.display = 'block'; g.style.display = 'none'; h.style.display = 'none'; renderSetupUI(); }
-    else { s.style.display = 'none'; g.style.display = 'block'; h.style.display = 'flex'; renderTable(); updateDiceUI(); }
+    const s = document.getElementById('setup-container');
+    const g = document.getElementById('game-container');
+    const h = document.getElementById('header-controls');
+    const resetBtn = document.getElementById('reset-btn');
+    
+    if (players.length === 0) { 
+        s.style.display = 'block'; 
+        g.style.display = 'none'; 
+        h.style.display = 'flex'; // Keep top-right controls visible
+        if (resetBtn) resetBtn.style.display = 'none'; // Hide reset before game starts
+        renderSetupUI(); 
+    } else { 
+        s.style.display = 'none'; 
+        g.style.display = 'block'; 
+        h.style.display = 'flex'; 
+        if (resetBtn) resetBtn.style.display = 'block'; // Show reset during game
+        renderTable(); 
+        updateDiceUI(); 
+    }
 }
 
 function calculateTotals() {
@@ -133,9 +149,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     toggleViews();
+    
+    // --- INJECT THIS SCROLL SYNC BLOCK ---
+    const tableContainer = document.querySelector('.table-container');
+    const headerContainer = document.getElementById('header-scroll-container');
+    if (tableContainer && headerContainer) {
+        tableContainer.addEventListener('scroll', () => {
+            headerContainer.scrollLeft = tableContainer.scrollLeft;
+        });
+    }
+    // -------------------------------------
+
+    // Close modal if user clicks outside the modal content
+    window.onclick = function(event) {
+        const modal = document.getElementById('rules-modal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
 });
 
-window.toggleOptimizer = () => { optimizerEnabled = !optimizerEnabled; document.getElementById('toggle-opt-btn').innerText = optimizerEnabled ? 'Opt: ON' : 'Opt: OFF'; renderTable(); };
+window.toggleRules = () => {
+    const modal = document.getElementById('rules-modal');
+    modal.style.display = (modal.style.display === "block") ? "none" : "block";
+};
+
+window.toggleOptimizer = () => { 
+    optimizerEnabled = !optimizerEnabled; 
+    const btn = document.getElementById('toggle-opt-btn');
+    btn.innerText = optimizerEnabled ? 'Optimzer: ON' : 'Optimizer: OFF';
+    btn.style.backgroundColor = optimizerEnabled ? '#beddff' : '#fff'; // Maps the button color to your chosen blue
+    renderTable(); 
+};
+let resetTimer;
+window.handleReset = () => {
+    const btn = document.getElementById('reset-btn');
+    
+    // If already in warning state, execute the reset
+    if (btn.innerText === 'SURE?') {
+        location.reload();
+    } else {
+        // Change to warning state
+        btn.innerText = 'SURE?';
+        btn.style.background = '#FF0000'; // Brutalist Red
+        btn.style.color = '#FFFFFF';
+        
+        // UX Bonus: Revert to normal after 3 seconds if not clicked again
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+            btn.innerText = 'RESET';
+            btn.style.background = '#fff'; // Back to default white
+            btn.style.color = '#000';      // Back to default black text
+        }, 3000);
+    }
+};
 window.toggleDiceView = () => { diceView = (diceView === 'dice' ? 'numbers' : 'dice'); updateDiceUI(); };
 window.toggleHold = (i) => { if (rollsLeft < 3) { heldDice[i] = !heldDice[i]; updateDiceUI(); } };
 function resetDice() { heldDice = [false, false, false, false, false]; rollsLeft = 3; updateDiceUI(); renderTable(); }

@@ -1,35 +1,26 @@
-const CACHE_NAME = 'yahtzee-v5';
-const ASSETS = [
+const CACHE_NAME = 'yacht-party-v1';
+const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './styles.css',
-    './app-v5.js', // Updated filename
-    './manifest.json'
+    './app-v5.js'
 ];
 
+// Install event: Cache our game files
 self.addEventListener('install', event => {
-    self.skipWaiting(); 
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-    );
-});
-
-self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cache => {
-                    if (cache !== CACHE_NAME) {
-                        return caches.delete(cache);
-                    }
-                })
-            );
+        caches.open(CACHE_NAME).then(cache => {
+            console.log('Opened cache');
+            return cache.addAll(ASSETS_TO_CACHE);
         })
     );
 });
 
+// Fetch event: Serve from cache if offline
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request).then(response => response || fetch(event.request))
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request);
+        })
     );
 });

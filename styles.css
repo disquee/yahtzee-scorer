@@ -13,6 +13,30 @@
 body { background: var(--bg-white); color: var(--text-black); font-family: var(--font-sans); margin: 0; padding: 0; }
 main { max-width: 900px; margin: 0 auto; padding: 1rem; }
 
+/* --- HEADER ALIGNMENT --- */
+header {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+header h1 {
+    margin: 0; /* Removes default margin so it vertically centers with the buttons */
+    line-height: 1;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+}
+
+/* --- HEADER CONTROLS --- */
+.controls { display: flex; gap: 10px; }
+
 /* --- THE MONOLITHIC STICKY HUD --- */
 #sticky-hud {
     position: sticky; 
@@ -60,7 +84,7 @@ main { max-width: 900px; margin: 0 auto; padding: 1rem; }
 
 .status-bar {
     border: 3px solid #000; 
-    background: var(--terminal-gray); 
+    background: #ffc78a; /* Neutral, action-oriented light orange */
     padding: 0.8rem;
     margin-top: -3px; 
     font-family: var(--font-mono); 
@@ -68,31 +92,86 @@ main { max-width: 900px; margin: 0 auto; padding: 1rem; }
     text-align: center;
 }
 
-/* --- TABLE ARCHITECTURE --- */
-.header-table, #score-table {
-    width: 100%; border-collapse: collapse; table-layout: fixed;
+
+/* --- TABLE ARCHITECTURE (SCROLL-SYNCED) --- */
+.header-scroll-container {
+    overflow-x: hidden; /* JS controls this scroll */
+    border: 3px solid #000;
+    margin-top: -3px;
+    background: var(--terminal-gray);
 }
 
-.header-table { border: 3px solid #000; margin-top: -3px; background: var(--terminal-gray); }
+.table-container { 
+    overflow-x: auto; 
+    border: 3px solid #000; 
+    border-top: none; 
+    background: #fff; 
+}
+
+/* Remove borders from the tables themselves to force identical box-model math */
+.header-table, #score-table {
+    width: 100%; 
+    border-collapse: collapse; 
+    table-layout: fixed;
+    border: none;
+    min-width: 800px; /* Forces both tables to expand identically */
+}
 
 th, td { border: 1px solid #4B5563; padding: 0.8rem; height: 60px; text-align: center; box-sizing: border-box; }
 
 /* Category Column Lock */
 th:first-child, td:first-child {
+    position: sticky; left: 0; z-index: 10;
     width: 140px; border-right: 3px solid #000; text-align: left;
     font-family: var(--font-mono); font-weight: bold; background: var(--terminal-gray);
 }
 
+/* Category Column Lock - Hard Fixed Widths */
+th:first-child, td:first-child {
+    width: 140px !important; 
+    min-width: 140px !important;
+    max-width: 140px !important;
+    border-right: 3px solid #000; 
+    text-align: left;
+    font-family: var(--font-mono); 
+    font-weight: bold; 
+    background: var(--terminal-gray);
+}
+
 /* Scrollable Body */
-.table-container { overflow-x: auto; border: 3px solid #000; border-top: none; background: #fff; }
+/* 1. Remove the outer border from the wrapper so it doesn't compress the inner width */
+.table-container { 
+    overflow-x: auto; 
+    border-left: 3px solid #000;
+    border-right: 3px solid #000;
+    border-bottom: 3px solid #000;
+    border-top: none; 
+    background: #fff; 
+}
 .total-row td { background: var(--terminal-gray); border-top: 3px solid #000; font-weight: bold; }
 
 /* --- UI ELEMENTS --- */
 .setup-container { border: 3px solid #000; padding: 2rem; box-shadow: 8px 8px 0px #000; margin-top: 2rem; }
 .setup-group { margin-bottom: 15px; }
-.setup-group input { width: 300px; display: block; border: 2px solid #000; padding: 0.6rem; background: var(--terminal-gray); font-family: var(--font-mono); }
-#start-game-btn { background: #000; color: #fff; margin-right: 15px !important; margin-top: 1rem; }
+.setup-group input { width: 300px; display: block; border: 2px solid #000; padding: 0.6rem; background: var(--terminal-gray); font-family: var(--font-mono); font-weight: bold; font-size: 1rem; }
+#start-game-btn { background: #A8FFB2; color: #000; margin-right: 15px !important; margin-top: 1rem; }
+/* --- SETUP SCREEN ALIGNMENT FIX --- */
+.player-count-row {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Adds a nice gap between the question and the dropdown */
+    margin-bottom: 1.5rem;
+}
 
+#player-count {
+    width: auto; /* Overrides the 100% width from the global select rule */
+    height: auto;
+    border: 2px solid #000; /* Restores the brutalist border */
+    padding: 0.4rem 1rem;
+    background: var(--terminal-gray);
+    text-align: left;
+    text-align-last: left;
+}
 .die { 
     width: 55px; height: 55px; border: 2px solid #000; display: flex; 
     align-items: center; justify-content: center; font-size: 3.2rem; 
@@ -101,4 +180,69 @@ th:first-child, td:first-child {
 .die.held { background: #000; color: #fff; }
 
 button { font-family: var(--font-mono); text-transform: uppercase; font-weight: bold; border: 2px solid #000; padding: 0.6rem 1rem; cursor: pointer; box-shadow: 4px 4px 0px #000; background: #fff; }
-select { width: 100%; height: 100%; border: none; background: transparent; font-family: var(--font-mono); cursor: pointer; }
+
+select { 
+    width: 100%; 
+    height: 100%; 
+    border: none; 
+    background: transparent; 
+    font-family: var(--font-mono); 
+    font-weight: bold; 
+    font-size: 1rem; 
+    color: #000; 
+    text-align: center; 
+    text-align-last: center; 
+    cursor: pointer; 
+}
+
+option { 
+    font-weight: bold; 
+    color: #000; 
+    text-align: center; 
+}
+
+/* --- MODAL OVERLAY --- */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 2000; 
+    left: 0; top: 0; 
+    width: 100%; height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.8);
+}
+
+.modal-content {
+    background-color: var(--bg-white);
+    margin: 5% auto;
+    padding: 2rem;
+    border: 4px solid #000;
+    box-shadow: 8px 8px 0px #000;
+    max-width: 700px;
+    line-height: 1.6;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #000;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.modal-header h2 { margin: 0; font-family: var(--font-mono); text-transform: uppercase; }
+.close-btn { font-size: 1.5rem; border: none; background: none; box-shadow: none; padding: 0; cursor: pointer; }
+.close-btn:hover { color: #555; }
+
+.rules-section h3 {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    margin-top: 1.5rem;
+    border-bottom: 2px solid #000;
+    display: inline-block;
+    padding-bottom: 0.2rem;
+}
+
+.rules-section ul { padding-left: 1.5rem; }
+.rules-section li { margin-bottom: 0.5rem; }

@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Disqo's Yacht Game v5</title>
+    <title>Disqo Yacht Party</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
     <header>
-        <h1>DISQO'S YACHT GAME <small>v5</small></h1>
+        <h1>DISQO'S YACHT PARTY <small>v7</small></h1>
         <div class="controls" id="header-controls" style="display: none;">
-            <button id="toggle-opt-btn" onclick="toggleOptimizer()">Opt: ON</button>
-            <button id="reset-btn" onclick="location.reload()">RESET</button>
+            <button id="rules-btn" onclick="toggleRules()">RULES</button>
+            <button id="toggle-opt-btn" onclick="toggleOptimizer()">Optimizer: OFF</button>
+            <button id="reset-btn" onclick="handleReset()">RESET</button>
         </div>
     </header>
 
@@ -37,10 +40,11 @@
                     </div>
                 </div>
                 <div id="status-bar" class="status-bar" style="display: none;">ROLL DICE TO ADD SCORE!</div>
-                
-                <table class="header-table">
-                    <thead id="table-head"></thead>
-                </table>
+                <div id="header-scroll-container" class="header-scroll-container">
+                    <table class="header-table">
+                        <thead id="table-head"></thead>
+                    </table>
+                </div>
             </div>
 
             <div class="table-container">
@@ -50,6 +54,56 @@
             </div>
         </div>
     </main>
+
+    <div id="rules-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Rules of Yacht</h2>
+                <button class="close-btn" onclick="toggleRules()">[X]</button>
+            </div>
+            <div class="rules-section">
+                <h3>Objective</h3>
+                <p>Score the highest total points after 13 rounds by rolling 5 dice to make specific combinations.</p>
+                
+                <h3>Gameplay Loop</h3>
+                <ul>
+                    <li>You have <strong>3 rolls</strong> per round.</li>
+                    <li>After any roll, click a die to <strong>hold</strong> it. Held dice are not rolled on subsequent attempts.</li>
+                    <li>You may score your dice at any point during your turn. After the 3rd roll, you <em>must</em> select a category on the scorecard.</li>
+                    <li>If your dice do not meet the requirements of any available category, you must sacrifice a category by taking a zero.</li>
+                </ul>
+
+                <h3>Scoring Categories</h3>
+                <p><strong>Upper Section</strong></p>
+                <ul>
+                    <li><strong>Ones through Sixes:</strong> Sum of the specified die value. <em>(e.g., Rolling three 4s scores 12 in Fours).</em></li>
+                    <li><strong>Bonus:</strong> If your Upper Section sum is 63 or higher, you automatically receive a 35-point bonus.</li>
+                </ul>
+
+                <p><strong>Lower Section</strong></p>
+                <ul>
+                    <li><strong>3 of a Kind:</strong> Requires 3 dice of the same value. Scores the sum of <em>all</em> 5 dice.</li>
+                    <li><strong>4 of a Kind:</strong> Requires 4 dice of the same value. Scores the sum of <em>all</em> 5 dice.</li>
+                    <li><strong>Full House:</strong> Requires 3 of one number and 2 of another. Scores a flat 25 points.</li>
+                    <li><strong>Small Straight:</strong> Requires 4 sequential dice (e.g., 1-2-3-4). Scores a flat 30 points.</li>
+                    <li><strong>Large Straight:</strong> Requires 5 sequential dice. Scores a flat 40 points.</li>
+                    <li><strong>Yacht:</strong> Requires 5 dice of the same value. Scores a flat 50 points.</li>
+                    <li><strong>Chance:</strong> Any combination. Scores the sum of all 5 dice.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script src="app-v5.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.error('Service Worker failed', err));
+            });
+        }
+    </script>
+</body>
 </body>
 </html>
