@@ -47,22 +47,55 @@ function renderTable() {
 function updateScore(pIdx, catId, val) {
     if (val === "") delete players[pIdx].scores[catId];
     else players[pIdx].scores[catId] = parseInt(val, 10);
+    
+    // Check if round should advance
     const count = players.reduce((s, p) => s + Object.keys(p.scores).filter(k => !categories.find(c => c.id === k).isCalc).length, 0);
     if (count >= currentRound * players.length && currentRound < 13) currentRound++;
-    if (!isScoreOnly) resetDice(); else renderTable();
+    
+    if (!isScoreOnly) {
+        resetDice(); 
+    } else { 
+        // Force the UI to refresh the round counter in Score Card mode
+        updateDiceUI(); 
+        renderTable(); 
+    }
 }
 
 function updateDiceUI() {
-    for (let i = 0; i < 5; i++) {
-        const el = document.getElementById(`die-${i}`);
-        if (el) {
-            el.innerText = (rollsLeft === 3 && !heldDice[i]) ? '-' : (diceView === 'numbers' ? diceValues[i] : unicodeDice[diceValues[i]]);
-            el.className = `die ${heldDice[i] ? 'held' : ''}`;
+    const diceDisp = document.querySelector('.dice-display');
+    const btnRow = document.querySelector('.dice-button-row');
+    const roundStatus = document.getElementById('rolls-left');
+    const sb = document.getElementById('status-bar');
+
+    if (isScoreOnly) {
+        // SCORE CARD MODE: Hide dice and buttons, show stacked typographic header
+        if (diceDisp) diceDisp.style.display = 'none';
+        if (btnRow) btnRow.style.display = 'none';
+        if (roundStatus) {
+            roundStatus.innerHTML = `
+                <div style="font-size: 2rem; font-weight: bold; letter-spacing: 0.05em; margin-bottom: 0.5rem; line-height: 1;">SCORE CARD</div>
+                <div style="font-size: 1rem; color: #555;">ROUND: ${currentRound}/13</div>
+            `;
+        }
+    } else {
+        // PLAY MODE: Show normal dice UI
+        if (diceDisp) diceDisp.style.display = 'flex';
+        if (btnRow) btnRow.style.display = 'flex';
+        
+        for (let i = 0; i < 5; i++) {
+            const el = document.getElementById(`die-${i}`);
+            if (el) {
+                el.innerText = (rollsLeft === 3 && !heldDice[i]) ? '-' : (diceView === 'numbers' ? diceValues[i] : unicodeDice[diceValues[i]]);
+                el.className = `die ${heldDice[i] ? 'held' : ''}`;
+            }
+        }
+        if (roundStatus) {
+            // Revert back to the single-line string for play mode
+            roundStatus.innerText = `ROUND: ${currentRound}/13 | ROLLS LEFT: ${rollsLeft}`;
         }
     }
-    const sb = document.getElementById('status-bar');
+
     if (sb) sb.style.display = (!isScoreOnly && rollsLeft === 3) ? 'block' : 'none';
-    document.getElementById('rolls-left').innerText = `ROUND: ${currentRound}/13 | ROLLS LEFT: ${rollsLeft}`;
 }
 
 function renderSetupUI() {
