@@ -246,3 +246,22 @@ option {
 
 .rules-section ul { padding-left: 1.5rem; }
 .rules-section li { margin-bottom: 0.5rem; }
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 650px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px; /* Adds breathing room between the title and the buttons */
+    }
+
+    .controls {
+        width: 100%;
+        flex-wrap: wrap; /* Allows the buttons themselves to wrap to a new line if the phone is super narrow */
+    }
+    
+    /* Ensure the h1 line-height doesn't cause weird spacing when stacked */
+    header h1 {
+        line-height: 1.1;
+    }
+}
