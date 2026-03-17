@@ -64,17 +64,20 @@ function updateScore(pIdx, catId, val) {
 function updateDiceUI() {
     const diceDisp = document.querySelector('.dice-display');
     const btnRow = document.querySelector('.dice-button-row');
-    const roundStatus = document.getElementById('rolls-left');
+    const roundStatus = document.getElementById('rolls-left'); // This targets your exact div
     const sb = document.getElementById('status-bar');
 
     if (isScoreOnly) {
-        // SCORE CARD MODE: Hide dice and buttons, show stacked typographic header
+        // SCORE CARD MODE: Hide dice and buttons
         if (diceDisp) diceDisp.style.display = 'none';
         if (btnRow) btnRow.style.display = 'none';
-        if (roundStatus) {
+        
+        // Inject the stacked typographic header right into your #rolls-left div
+    if (roundStatus) {
             roundStatus.innerHTML = `
-                <div style="font-size: 2rem; font-weight: bold; letter-spacing: 0.05em; margin-bottom: 0.5rem; line-height: 1;">SCORE CARD</div>
-                <div style="font-size: 1rem; color: #555;">ROUND: ${currentRound}/13</div>
+                <div style="font-size: 2rem; font-weight: bold; letter-spacing: 0.05em; margin-bottom: 0.8rem; line-height: 1;">SCORE CARD</div>
+                <div class="dedication" style="margin-top: 0; margin-bottom: 1rem;">MADE FOR MAMA AND PAPA DISQO</div>
+                <div style="font-size: 1rem; color: #555; padding-bottom: 0.5rem; font-weight: bold;">ROUND: ${currentRound}/13</div>
             `;
         }
     } else {
@@ -90,7 +93,7 @@ function updateDiceUI() {
             }
         }
         if (roundStatus) {
-            // Revert back to the single-line string for play mode
+            // Revert back to the single-line string for active play mode
             roundStatus.innerText = `ROUND: ${currentRound}/13 | ROLLS LEFT: ${rollsLeft}`;
         }
     }
