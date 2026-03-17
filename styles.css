@@ -107,6 +107,12 @@ header h1 {
     border-top: none; 
     background: #fff; 
 }
+/* --- UPPER SECTION DIVIDER --- */
+/* Targets the 9th row (Upper Total) to ensure a heavy section break */
+tbody tr:nth-child(9) td,
+tbody tr:nth-child(9) th {
+    border-bottom: 3px solid #000 !important;
+}
 
 /* Remove borders from the tables themselves to force identical box-model math */
 .header-table, #score-table {
@@ -151,9 +157,54 @@ th:first-child, td:first-child {
 .total-row td { background: var(--terminal-gray); border-top: 3px solid #000; font-weight: bold; }
 
 /* --- UI ELEMENTS --- */
+/* --- WELCOME SCREEN EDGE-CASE HARMONY --- */
+
+/* REQUIREMENT 1: Guaranteed Button Text Containment (forces multi-line wrapping) */
+#start-game-btn, #score-only-btn {
+    white-space: normal;      /* Explicitly allows text to wrap to multi-line */
+    overflow-wrap: break-word; /* Robustly breaks even very long single words */
+    word-wrap: break-word;     /* Legacy browser support */
+    display: inline-flex;     /* Helps with internal padding and vertical scaling */
+    align-items: center;      /* Centers multi-line text vertically */
+    justify-content: center;   /* Centers text horizontally */
+    min-height: 45px;         /* Sets a minimum height for a good tap target */
+    box-sizing: border-box;    /* Ensures borders/padding are contained within width */
+}
+
+/* REQUIREMENT 2: Header Escape Hatch (shift headers over the left shadow) */
+.setup-container h2 {
+    overflow-wrap: break-word; /* Prevents text from bleeding out the right side */
+    word-wrap: break-word;
+    word-break: break-word;    /* Forces hard breaks on massive words if necessary */
+    max-width: 100%;
+    margin-left: 0;            /* Resets any accidental negative margins */
+}
+.player-count-row label {
+    margin-left: -20px;       /* Deliberate, consistent shift over the welcome box border */
+    overflow: visible;         /* Ensure nothing is clipped by the container */
+    max-width: none;          /* Allow text to grow beyond standard width */
+}
+
+/* Ensure the question can also scale nicely when shifted */
+.player-count-row {
+    flex-wrap: wrap;          /* Allows label/dropdown to wrap when on same line */
+}
+
 .setup-container { border: 3px solid #000; padding: 2rem; box-shadow: 8px 8px 0px #000; margin-top: 2rem; }
 .setup-group { margin-bottom: 15px; }
-.setup-group input { width: 300px; display: block; border: 2px solid #000; padding: 0.6rem; background: var(--terminal-gray); font-family: var(--font-mono); font-weight: bold; font-size: 1rem; }
+.setup-group input { 
+    width: 100%;             /* Fluid width for mobile */
+    max-width: 300px;        /* Keeps it from getting infinitely wide on desktop */
+    box-sizing: border-box;  /* Forces the heavy borders inside the width calculation */
+    display: block; 
+    border: 2px solid #000; 
+    padding: 0.6rem; 
+    background: var(--terminal-gray); 
+    font-family: var(--font-mono); 
+    font-weight: bold;   
+    font-size: 1rem;     
+    color: var(--text-black); 
+}
 #start-game-btn { background: #A8FFB2; color: #000; margin-right: 15px !important; margin-top: 1rem; }
 /* --- SETUP SCREEN ALIGNMENT FIX --- */
 .player-count-row {
@@ -264,4 +315,79 @@ option {
     header h1 {
         line-height: 1.1;
     }
+    /* Stacks the "How many players" label and the dropdown */
+    .player-count-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    /* Makes the dropdown stretch nicely on mobile */
+    #player-count {
+        width: 100%; 
+        box-sizing: border-box;
+    }
+
+    /* Stacks the buttons and adds breathing room */
+    #start-game-btn, #score-only-btn {
+        display: block;
+        width: 100%; /* Makes buttons full-width and highly tappable on mobile */
+        box-sizing: border-box;
+    }
+
+    #start-game-btn {
+        margin-right: 0 !important; /* Overrides the desktop margin */
+        margin-bottom: 15px; /* The gap between the two buttons */
+    }
+    /* --- MOBILE DICE & BUTTON CONTAINMENT --- */
+    
+    /* Allow the dice container to wrap and reduce the gap */
+    .dice-display {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px; /* Tighter spacing for mobile */
+        margin-bottom: 1rem;
+    }
+
+    /* Scale the dice down slightly so 5 can still fit in a row on most phones */
+    .die {
+        width: 45px; 
+        height: 60px;
+        font-size: 1.8rem; /* Scales down the dice number/icon */
+        box-sizing: border-box; /* Forces shadows/borders inside the width calculation */
+    }
+
+    /* Allow the action buttons to wrap and share space */
+    .dice-button-row {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Force the buttons to stay inside the box */
+    .dice-button-row button {
+        flex: 1 1 40%; /* Tells buttons to share space, but wrap if they get smaller than 40% of the box */
+        margin: 0 !important; /* Strips out any desktop margins pushing them out of bounds */
+        white-space: normal;
+        box-sizing: border-box;
+    }
+}
+@media (max-width: 400px) {
+    .setup-container h2 {
+        font-size: 1.5rem; 
+    }
+}
+
+/* --- DEDICATION FOOTNOTE --- */
+.dedication {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem; /* Keeps it small and elegant */
+    text-transform: uppercase;
+    color: #555; /* Muted so it doesn't fight the stark black UI */
+    letter-spacing: 0.1em; /* Widens the text slightly for a technical feel */
+    margin-top: 2rem; /* Pushes it down away from the main box */
+    width: 100%;
 }
